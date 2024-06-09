@@ -111,7 +111,7 @@ class PatronServiceImplTest {
     }
 
     @NullSource
-    @ValueSource(strings = {""})
+    @ValueSource(strings = "")
     @ParameterizedTest
     void createPatron_ShouldThrowException_WhenNameIsNullOrEmpty(String name) {
         // Given
@@ -126,7 +126,7 @@ class PatronServiceImplTest {
     }
 
     @NullSource
-    @ValueSource(strings = {""})
+    @ValueSource(strings = "")
     @ParameterizedTest
     void createPatron_ShouldThrowException_WhenMobileIsNullOrEmpty(String mobile) {
         // Given

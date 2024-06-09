@@ -148,7 +148,7 @@ class BookServiceImplTest {
     }
 
     @NullSource
-    @ValueSource(strings = {""})
+    @ValueSource(strings = "")
     @ParameterizedTest
     void createBook_ShouldThrowException_WhenTitleIsNullOrEmpty(String title) {
         // Given
@@ -164,7 +164,7 @@ class BookServiceImplTest {
     }
 
     @NullSource
-    @ValueSource(strings = {""})
+    @ValueSource(strings = "")
     @ParameterizedTest
     void createBook_ShouldThrowException_WhenAuthorIsNullOrEmpty(String author) {
         // Given
@@ -180,7 +180,7 @@ class BookServiceImplTest {
     }
 
     @NullSource
-    @ValueSource(strings = {""})
+    @ValueSource(strings = "")
     @ParameterizedTest
     void createBook_ShouldThrowException_WhenISBNIsNullOrEmpty(String isbn) {
         // Given
@@ -267,7 +267,7 @@ class BookServiceImplTest {
     }
 
     @NullSource
-    @ValueSource(strings = {""})
+    @ValueSource(strings = "")
     @ParameterizedTest
     void updateBook_ShouldThrowException_WhenBookTitleIsNullOrEmpty(String title) {
         // Given
@@ -284,7 +284,7 @@ class BookServiceImplTest {
     }
 
     @NullSource
-    @ValueSource(strings = {""})
+    @ValueSource(strings = "")
     @ParameterizedTest
     void updateBook_ShouldThrowException_WhenBookAuthorIsNullOrEmpty(String author) {
         // Given
@@ -301,7 +301,7 @@ class BookServiceImplTest {
     }
 
     @NullSource
-    @ValueSource(strings = {""})
+    @ValueSource(strings = "")
     @ParameterizedTest
     void updateBook_ShouldThrowException_WhenISBNIsNullOrEmpty(String isbn) {
         // Given
