@@ -2,7 +2,6 @@ package com.example.librarymanagementsystem.service.impl;
 
 import com.example.librarymanagementsystem.dto.PatronDto;
 import com.example.librarymanagementsystem.entity.Patron;
-import com.example.librarymanagementsystem.exception.bookexception.CannotDeleteBookException;
 import com.example.librarymanagementsystem.exception.patronexception.CannotDeletePatronException;
 import com.example.librarymanagementsystem.exception.patronexception.PatronNotFoundException;
 import com.example.librarymanagementsystem.exception.patronexception.InvalidPatronException;
@@ -12,6 +11,9 @@ import com.example.librarymanagementsystem.repository.PatronRepository;
 import com.example.librarymanagementsystem.service.PatronService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +31,7 @@ public class PatronServiceImpl implements PatronService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "patronCache", key = "#patronId")
     public List<PatronDto> getAllPatrons() {
         return patronRepository.findAll().stream()
                 .map(PatronMapper::convertToDto)
@@ -37,6 +40,7 @@ public class PatronServiceImpl implements PatronService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = "patronCache", unless = "#result == null")
     public PatronDto getPatron(long patronId) {
         return patronRepository.findById(patronId)
                 .map(PatronMapper::convertToDto)
@@ -46,6 +50,8 @@ public class PatronServiceImpl implements PatronService {
     @Override
     @Transactional
     public PatronDto createPatron(PatronDto patronDto) {
+        this.checkValidPatronDtoData(patronDto);
+
         Patron patron = patronRepository.save(convertToEntity(patronDto));
 
         patronDto.setId(patron.getId());
@@ -55,32 +61,23 @@ public class PatronServiceImpl implements PatronService {
 
     @Override
     @Transactional
+    @CachePut(value = "patronCache", key = "#result.id")
     public PatronDto updatePatron(long patronId, PatronDto patronDto) {
-        if (patronRepository.existsById(patronId)) {
-            if (patronDto.getName() == null || patronDto.getName().isEmpty()) {
-                throw new InvalidPatronException("Patron name cannot be null or empty");
-            }
+        this.checkValidPatronDtoData(patronDto);
 
-            if (patronDto.getMobile() == null || patronDto.getMobile().isEmpty()) {
-                throw new InvalidPatronException("Patron mobile cannot be null or empty");
-            }
+        Patron existingPatron = patronRepository.findById(patronId)
+                .orElseThrow(() -> new PatronNotFoundException("Patron not found with id " + patronId));
 
-            Patron existingPatron = patronRepository.findById(patronId)
-                    .orElseThrow(() -> new PatronNotFoundException("Patron not found with id " + patronId));
+        // update the existing patron with the new data
+        existingPatron.setName(patronDto.getName());
+        existingPatron.setMobile(patronDto.getMobile());
 
-            // update the existing patron with the provided data
-            existingPatron.setName(patronDto.getName());
-            existingPatron.setMobile(patronDto.getMobile());
-
-            return convertToDto(patronRepository.save(existingPatron));
-
-        } else {
-            throw new PatronNotFoundException("Patron not found with id " + patronId);
-        }
+        return convertToDto(patronRepository.save(existingPatron));
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = "patronCache", key = "#patronId")
     public void deletePatron(long patronId) {
         if (patronRepository.existsById(patronId)) {
             // check if this patron has borrowed books
@@ -92,6 +89,16 @@ public class PatronServiceImpl implements PatronService {
 
         } else {
             throw new PatronNotFoundException("Patron not found with id " + patronId);
+        }
+    }
+
+    private void checkValidPatronDtoData(PatronDto patronDto) {
+        if (patronDto.getName() == null || patronDto.getName().isEmpty()) {
+            throw new InvalidPatronException("Patron name cannot be null or empty");
+        }
+
+        if (patronDto.getMobile() == null || patronDto.getMobile().isEmpty()) {
+            throw new InvalidPatronException("Patron mobile cannot be null or empty");
         }
     }
 }

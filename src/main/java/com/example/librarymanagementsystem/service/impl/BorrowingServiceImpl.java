@@ -6,7 +6,6 @@ import com.example.librarymanagementsystem.entity.BorrowingRecord;
 import com.example.librarymanagementsystem.entity.Patron;
 import com.example.librarymanagementsystem.exception.borrowingbookexception.CannotBorrowBookException;
 import com.example.librarymanagementsystem.exception.borrowingbookexception.CannotReturnBookException;
-import com.example.librarymanagementsystem.mapper.BorrowingRecordMapper;
 import com.example.librarymanagementsystem.repository.BookRepository;
 import com.example.librarymanagementsystem.repository.BorrowingRecordRepository;
 import com.example.librarymanagementsystem.repository.PatronRepository;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 
 import static com.example.librarymanagementsystem.mapper.BorrowingRecordMapper.convertToDto;
@@ -29,14 +27,6 @@ public class BorrowingServiceImpl implements BorrowingService {
     private final BorrowingRecordRepository borrowingRecordRepository;
     private final BookRepository bookRepository;
     private final PatronRepository patronRepository;
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<BorrowingRecordDto> getAllBorrowingRecords() {
-        return borrowingRecordRepository.findAll().stream()
-                .map(BorrowingRecordMapper::convertToDto)
-                .toList();
-    }
 
     @Override
     @Transactional
@@ -54,7 +44,8 @@ public class BorrowingServiceImpl implements BorrowingService {
             throw new CannotBorrowBookException("Patron not found.");
 
         } else {
-            Optional<BorrowingRecord> existingRecord = borrowingRecordRepository.findByBookIdAndPatronId(bookId, patronId);
+            Optional<BorrowingRecord> existingRecord = borrowingRecordRepository
+                    .findByBookIdAndPatronId(bookId, patronId);
 
             if (existingRecord.isPresent() && existingRecord.get().getReturnDate() == null) {
                 throw new CannotBorrowBookException("This book is already borrowed by the same patron.");
